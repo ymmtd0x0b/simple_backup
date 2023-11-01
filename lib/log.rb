@@ -17,12 +17,18 @@ class Log
     @path = "#{path}/log.txt"
   end
 
-  def write(status:, cause: nil)
+  def write(status:, cause: nil, dest: nil)
     date = DateTime.now.strftime('%Y/%m/%d %H:%M')
-    template = "#{date} | バックアップ #{STATUS[status]} | #{CAUSE[cause]}"
+    template = [date, STATUS[status]]
+
+    if cause.nil?
+      template << dest
+    else
+      template << CAUSE[cause]
+    end
 
     File.open(@path, 'a') do |log_file|
-      log_file.puts template.chomp(' ')
+      log_file.puts template.join(' | ')
     end
   end
 end
