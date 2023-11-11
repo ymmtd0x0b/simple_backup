@@ -4,32 +4,86 @@ require 'sys/filesystem'
 require 'progress_bar'
 
 class Backup
-  attr_reader :dest_dir
+  attr_reader :path
 
-  def initialize(src, dest)
-    @src = src
-    @dest = dest
-    @dest_dir = [dest, backup_name].join('/')
+  def initialize(src, dest, interval)
+    @src      = src
+    @dest     = dest
+    @interval = interval.downcase
+
+    @path = [dest, backup_name].join('/')
   end
 
-  def backup_name
-    end_of_last_month.strftime('%Y_%m_%d')
+  def run
+    FileUtils.mkdir @path
+    FileUtils.cp_r(@src, @path, preserve: true, dereference_root: false)
   end
 
-  def end_of_last_month
-    today = Date.today
-    Date.new(today.year, today.month, 1).prev_day
+  def run_with_progress_bar
+    progress_bar = setup_progress_bar
+
+    FileUtils.mkdir @path
+    copy_r(@src, @path, progress_bar)
+    puts '' # プログレスバーの出力に改行がないので、ここに改行を追加
   end
 
-  def exist?
-    Dir.exist? @dest_dir
+  def enough_interval?
+    interval =
+      case @interval
+      when 'day'
+        1
+      when 'week'
+        7
+      when 'month'
+        days_per_month(last_backup_date)
+      else
+        # デフォルトは１ヶ月
+        days_per_month(last_backup_date)
+      end
+
+    lapsed_days = (Date.today - last_backup_date).to_i
+    lapsed_days >= interval
   end
 
   def enough_capacity?
-    src_size = directory_size(@src)
+    src_size  = directory_size(@src)
     dest_size = Sys::Filesystem.stat(@dest).bytes_available
 
     src_size < dest_size
+  end
+
+  def success?
+    src_size    = directory_size(@src)
+    backup_size = directory_size(@path)
+
+    # 「バックアップ元」と「バックアップ先」のディレクトリサイズが
+    # イコールならバックアップ成功とする
+    src_size == backup_size
+  end
+
+  def rollback
+    FileUtils.remove_entry_secure(@path) if Dir.exist? @path
+  end
+
+  private
+
+  def backup_name
+    Date.today.strftime('%Y_%m_%d')
+  end
+
+  def last_backup_date
+    last_backup = Dir.children(@dest)
+                     .filter { |file| File.stat("#{@dest}/#{file}").directory? }
+                     .sort
+                     .last
+
+    date = last_backup.gsub(/_/, '-')
+    Date.parse date
+  end
+
+  def days_per_month(date)
+    next_month = date.next_month
+    Date.new(next_month.year, next_month.month, 1).prev_day.day
   end
 
   def directory_size(path)
@@ -45,19 +99,6 @@ class Backup
     end
 
     sum
-  end
-
-  def run
-    FileUtils.mkdir @dest_dir
-    FileUtils.cp_r(@src, @dest_dir, preserve: true, dereference_root: false)
-  end
-
-  def run_with_progress_bar
-    progress_bar = setup_progress_bar
-
-    FileUtils.mkdir @dest_dir
-    copy_r(@src, @dest_dir, progress_bar)
-    puts '' # プログレスバーに改行がないのでここで改行する
   end
 
   def setup_progress_bar
@@ -88,20 +129,20 @@ class Backup
       fstat = File.lstat(src_file)
 
       if fstat.directory?
-        dest_dir = [dest, file].join('/')
-        Dir.mkdir dest_dir
-        copy_r(src_file, dest_dir, bar)
+        path = [dest, file].join('/')
+        Dir.mkdir path
+        copy_r(src_file, path, bar)
       elsif fstat.symlink?
         FileUtils.cp_file(src_file, dest, preserve: true, dereference_root: false)
       else
         FileUtils.cp(src_file, dest, preserve: true)
       end
 
-      # このタイミングでメタデータを更新しないと
-      # サブディレクトリ内のファイルをコピーする際に
-      # タイムスタンプが上書きされてしまう
+      # サブディレクトリ内のコピーが終了した後に
+      # 親ディレクトリのメタデータを更新することで
+      # 正しく反映される
       if fstat.directory?
-        copy_metadata(src_file, dest_dir)
+        copy_metadata(src_file, path)
         bar.increment!
       end
     end
@@ -112,17 +153,5 @@ class Backup
     File.utime st.atime, st.mtime, path
     File.chown st.uid, st.gid, path
     File.chmod st.mode, path
-  end
-
-  def success?
-    src_size = directory_size(@src)
-    dest_size = directory_size(@dest_dir)
-    # 「バックアップ元」と「バックアップ先」のディレクトリサイズが
-    # イコールならバックアップ成功とする
-    src_size == dest_size
-  end
-
-  def rollback
-    FileUtils.remove_entry_secure(@dest_dir)
   end
 end

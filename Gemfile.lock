@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    byebug (11.1.3)
     ffi (1.16.3)
     highline (2.1.0)
     options (2.3.2)
@@ -15,6 +16,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  byebug
   os
   progress_bar
   sys-filesystem

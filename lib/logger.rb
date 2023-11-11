@@ -14,25 +14,25 @@ class Logger
   end
 
   def success(path)
-    write_file "#{@date} | success | バックアップの実行に成功しました ========> | #{path} |"
+    write_file "#{@date} | success | バックアップの実行に成功しました ======> | #{path}"
   end
 
   def skip
-    write_file "#{@date} | skip    | 先月分のバックアップは既に保存済みです     |"
+    write_file "#{@date} | skip    | インターバル期間中なのでスキップします   |"
   end
 
   def fail
-    write_file "#{@date} | fail    | バックアップの内容が一致しませんでした     |"
+    write_file "#{@date} | fail    | バックアップの内容が一致しませんでした   |"
   end
 
   def error(path)
     case path
-    when ENV['src']
-      write_file "#{@date} | error   | バックアップ対象のフォルダが見つかりません | #{path} |"
-    when ENV['dest']
-      write_file "#{@date} | error   | バックアップ先のフォルダが見つかりません   | #{path} |"
+    when ENV['SOURCE']
+      write_file "#{@date} | error   | バックアップ対象がフォルダが存在しません | #{path}"
+    when ENV['DESTINATION']
+      write_file "#{@date} | error   | バックアップ先のフォルダが存在しません   | #{path}"
     else
-      write_file "#{@date} | error   | バックアップ先の容量が不足しています       |"
+      write_file "#{@date} | error   | バックアップ先の容量が不足しています     |"
     end
   end
 end

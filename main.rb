@@ -6,9 +6,11 @@ def main
   include DOTENV
   DOTENV.load
 
-  logger  = Logger.new(Dir.pwd)
-  src  = ENV['src']
-  dest = ENV['dest']
+  src  = ENV['SOURCE']
+  dest = ENV['DESTINATION']
+  interval = ENV['INTERVAL']
+
+  logger = Logger.new(Dir.pwd)
 
   if !Dir.exist? src
     logger.error(src)
@@ -20,14 +22,14 @@ def main
     exit
   end
 
-  backup = Backup.new(src, dest)
+  backup = Backup.new(src, dest, interval)
 
   if !backup.enough_capacity?
     logger.error
     exit
   end
 
-  if backup.exist?
+  if !backup.enough_interval?
     logger.skip
     exit
   end
@@ -35,10 +37,13 @@ def main
   backup.run_with_progress_bar
 
   if backup.success?
-    logger.success(backup.dest_dir)
+    logger.success(backup.path)
+    puts 'バックアップに成功しました'
   else
     logger.fail
     backup.rollback
+    puts 'バックアップに失敗しました'
+    puts 'ログを確認してください'
   end
 end
 
