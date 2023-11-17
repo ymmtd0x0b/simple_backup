@@ -11,9 +11,9 @@ Windows標準のバックアップ機能が何故か動作しないので、そ�
 これにより、次にバックアップする日付を気にする必要がなく、必要以上に保存することを防げるため気軽にバックアップを実行できます。
 
 
-## コピー元とコピー先の設定方法
+## 保存元と保存先の設定方法
 
-#### 1. simple_backup フォルダ内に.env ファイルを作成し、以下の内容を保存する
+#### 1. simple_backup ディレクトリ内に.env ファイルを作成し、以下の内容を保存する
 
 ```sh
 cd ~/***/simple_backup
@@ -22,12 +22,13 @@ touch .env
 
 ```
 # .env
-SOURCE      = ""
-DESTINATION = ""
-INTERVAL    = ""
+SOURCE      = "" # バックアップしたいディレクトリを指定する
+DESTINATION = "" # バックアップを保存するディレクトリを指定する
+INTERVAL    = "" # バックアップしたい間隔を指定する(オプション)
 ```
 
 #### 2. バックアップに必要な「保存元」と「保存先」のパスとバックアップを実行したい間隔を.env に保存する
+
 ※ 保存元と保存先は絶対パスで表記してください
 ※ バックアップしたい間隔は「 Month、Week、Day 」から選んでください(指定しない場合は Month になります)
 
@@ -35,9 +36,9 @@ INTERVAL    = ""
 
 ```
 # .env
-SOURCE      = "/home/alice/hoge" # バックアップの対象となるフォルダ
-DESTINATION = "/media/alice/device/backup" # バックアップを保存するフォルダ
-INTERVAL    = "Month" # バックアップする間隔
+SOURCE      = "/home/alice/hoge"
+DESTINATION = "/media/alice/device/backup"
+INTERVAL    = "Month"
 ```
 
 
@@ -65,7 +66,7 @@ simple_backup
 
 ### 実行結果の確認
 
-バックアップの実行後は simple_backup フォルダ内に log.txt が生成され、結果が記録されます。
+バックアップの実行後は simple_backup ディレクトリ内に log.txt が生成され、結果が記録されます。
 
 
 ## 導入
@@ -164,9 +165,9 @@ fi
 source ~/.profile
 ```
 
-#### 7. コピー元とコピー先を設定する
+#### 7. 保存元と保存先を設定する
 
-[設定](https://github.com/ymmtd0x0b/simple_backup#コピー元とコピー先の設定方法)を参照
+[設定](https://github.com/ymmtd0x0b/simple_backup#保存元と保存先の設定方法)を参照
 
 以降はターミナルにて `simple_backup` と入力して Enter するとバックアップを実行できます。
 
@@ -202,9 +203,12 @@ cd C:\Users\ユーザー名\Documents\simple_backup
 ruby bin\setup.rb
 ```
 
-#### 4. コピー元とコピー先を設定する
+※ セットアッププログラムが上手く動作しない場合は、手動でバッチファイルのリンクをデスクトップ等の任意の場所に作成してください
 
-[設定](https://github.com/ymmtd0x0b/simple_backup#コピー元とコピー先の設定方法)を参照
+
+#### 4. 保存元と保存先を設定する
+
+[設定](https://github.com/ymmtd0x0b/simple_backup#保存元と保存先の設定方法)を参照
 
 以降はデスクトップにある `simple_backup.bat` を起動させるとバックアップを実行できます。
 

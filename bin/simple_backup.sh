@@ -5,5 +5,5 @@ cd $(dirname $(realpath "$0"))
 cd ..
 ruby main.rb
 
-# echo '１分後にシャットダウンします...'
-# shutdown -h 1
+echo '１分後にシャットダウンします...'
+shutdown -h 1
